@@ -12,8 +12,8 @@ controller:
     # Metres. Confirm the wheel radius and wheel-center offsets against the
     # rm_description_for_task Xacro model before tuning or presenting results.
     wheel_radius: 0.07625
-    wheel_x_offset: 0.2018
-    wheel_y_offset: 0.1720
+    wheel_x_offset: 0.2000
+    wheel_y_offset: 0.2000
 
     # Choose "body" for base_link commands or "global" for odom/map commands.
     command_mode: body
