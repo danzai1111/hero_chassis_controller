@@ -153,7 +153,14 @@ c7aa61f merge: add body mode practice notes
 上述两个演示分支修改了同一行，合并时产生了真实文本冲突。最终解决保留
 body 和 global 两种说明。该冲突明确标注为个人练习，不是多人协作经历。
 
-个人 GitHub 远程仓库和最终推送记录待完成。
+个人 GitHub 仓库：
+
+```text
+https://github.com/danzai1111/hero_chassis_controller
+```
+
+远端已包含 `master`、`practice/body-doc` 和 `practice/global-doc`
+三条分支。
 
 ## 10. 视频交付
 
