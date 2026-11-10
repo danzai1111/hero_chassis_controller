@@ -1,11 +1,11 @@
+#include "hero_chassis_controller/hero_chassis_controller.h"
+
+#include <tf/transform_datatypes.h>
+
 #include <algorithm>
 #include <cmath>
 #include <cstddef>
-
 #include <pluginlib/class_list_macros.hpp>
-#include <tf/transform_datatypes.h>
-
-#include "hero_chassis_controller/hero_chassis_controller.h"
 
 namespace hero_chassis_controller {
 
@@ -20,8 +20,7 @@ constexpr std::size_t kBackRight = 3;
 
 bool HeroChassisController::init(
     hardware_interface::EffortJointInterface* effort_interface,
-    ros::NodeHandle& root_nh,
-    ros::NodeHandle& controller_nh) {
+    ros::NodeHandle& root_nh, ros::NodeHandle& controller_nh) {
   if (effort_interface == nullptr) {
     ROS_ERROR("The effort joint interface is null.");
     return false;
@@ -29,8 +28,9 @@ bool HeroChassisController::init(
 
   if (!controller_nh.getParam("joints", wheel_joint_names_) ||
       wheel_joint_names_.size() != kWheelCount) {
-    ROS_ERROR("Parameter 'joints' must list exactly four wheel joints in "
-              "FL, FR, BL, BR order.");
+    ROS_ERROR(
+        "Parameter 'joints' must list exactly four wheel joints in "
+        "FL, FR, BL, BR order.");
     return false;
   }
 
@@ -40,8 +40,9 @@ bool HeroChassisController::init(
       !std::isfinite(wheel_x_offset_) || wheel_x_offset_ <= 0.0 ||
       !controller_nh.getParam("wheel_y_offset", wheel_y_offset_) ||
       !std::isfinite(wheel_y_offset_) || wheel_y_offset_ <= 0.0) {
-    ROS_ERROR("wheel_radius, wheel_x_offset, and wheel_y_offset must be "
-              "positive metres.");
+    ROS_ERROR(
+        "wheel_radius, wheel_x_offset, and wheel_y_offset must be "
+        "positive metres.");
     return false;
   }
 
@@ -67,8 +68,9 @@ bool HeroChassisController::init(
       !std::isfinite(publish_rate) || publish_rate <= 0.0 ||
       !std::isfinite(max_wheel_acceleration_) ||
       max_wheel_acceleration_ < 0.0) {
-    ROS_ERROR("Timeout, wheel speed, effort, and publish rate must be "
-              "positive; wheel acceleration must be non-negative.");
+    ROS_ERROR(
+        "Timeout, wheel speed, effort, and publish rate must be "
+        "positive; wheel acceleration must be non-negative.");
     return false;
   }
   odometry_publish_period_ = 1.0 / publish_rate;
@@ -81,8 +83,8 @@ bool HeroChassisController::init(
           effort_interface->getHandle(wheel_joint_names_[index]));
     } catch (const hardware_interface::HardwareInterfaceException& exception) {
       ROS_ERROR_STREAM("Could not get wheel joint '"
-                       << wheel_joint_names_[index] << "': "
-                       << exception.what());
+                       << wheel_joint_names_[index]
+                       << "': " << exception.what());
       return false;
     }
 
@@ -104,8 +106,8 @@ bool HeroChassisController::init(
       "/cmd_vel", 1, &HeroChassisController::commandCallback, this);
 
   odom_publisher_.reset(
-      new realtime_tools::RealtimePublisher<nav_msgs::Odometry>(
-          root_nh, "/odom", 20));
+      new realtime_tools::RealtimePublisher<nav_msgs::Odometry>(root_nh,
+                                                                "/odom", 20));
   odom_publisher_->msg_.header.frame_id = odom_frame_id_;
   odom_publisher_->msg_.child_frame_id = base_frame_id_;
 
@@ -122,9 +124,8 @@ bool HeroChassisController::init(
   wheel_state_publisher_->msg_.layout.data_offset = 0;
 
   if (publish_tf_) {
-    tf_publisher_.reset(
-        new realtime_tools::RealtimePublisher<tf::tfMessage>(
-            root_nh, "/tf", 20));
+    tf_publisher_.reset(new realtime_tools::RealtimePublisher<tf::tfMessage>(
+        root_nh, "/tf", 20));
     tf_publisher_->msg_.transforms.resize(1);
     tf_publisher_->msg_.transforms[0].header.frame_id = odom_frame_id_;
     tf_publisher_->msg_.transforms[0].child_frame_id = base_frame_id_;
@@ -153,8 +154,8 @@ void HeroChassisController::starting(const ros::Time& time) {
   }
 }
 
-void HeroChassisController::update(
-    const ros::Time& time, const ros::Duration& period) {
+void HeroChassisController::update(const ros::Time& time,
+                                   const ros::Duration& period) {
   const double dt = period.toSec();
   if (dt <= 0.0 || !std::isfinite(dt)) {
     for (auto& joint : wheel_joints_) {
@@ -175,9 +176,8 @@ void HeroChassisController::update(
     largest_speed = std::max(largest_speed, std::abs(speed));
   }
 
-  const double scale = largest_speed > max_wheel_speed_
-                           ? max_wheel_speed_ / largest_speed
-                           : 1.0;
+  const double scale =
+      largest_speed > max_wheel_speed_ ? max_wheel_speed_ / largest_speed : 1.0;
   for (std::size_t index = 0; index < kWheelCount; ++index) {
     const double target = requested_wheel_speeds[index] * scale;
     if (max_wheel_acceleration_ > 0.0) {
@@ -202,8 +202,8 @@ void HeroChassisController::update(
   const double back_right = wheel_joints_[kBackRight].getVelocity();
   const double lever = wheel_x_offset_ + wheel_y_offset_;
 
-  body_linear_x_ = wheel_radius_ *
-                   (front_left + front_right + back_left + back_right) / 4.0;
+  body_linear_x_ =
+      wheel_radius_ * (front_left + front_right + back_left + back_right) / 4.0;
   body_linear_y_ = wheel_radius_ *
                    (-front_left + front_right + back_left - back_right) / 4.0;
   body_angular_z_ = wheel_radius_ *
@@ -212,9 +212,11 @@ void HeroChassisController::update(
 
   const double middle_yaw = yaw_ + 0.5 * body_angular_z_ * dt;
   x_ += (std::cos(middle_yaw) * body_linear_x_ -
-         std::sin(middle_yaw) * body_linear_y_) * dt;
+         std::sin(middle_yaw) * body_linear_y_) *
+        dt;
   y_ += (std::sin(middle_yaw) * body_linear_x_ +
-         std::cos(middle_yaw) * body_linear_y_) * dt;
+         std::cos(middle_yaw) * body_linear_y_) *
+        dt;
   yaw_ = normalizeAngle(yaw_ + body_angular_z_ * dt);
   if (wheel_state_publisher_ && wheel_state_publisher_->trylock()) {
     for (std::size_t index = 0; index < kWheelCount; ++index) {
@@ -267,8 +269,8 @@ void HeroChassisController::commandCallback(
     world_vector.vector.y = message->linear.y;
     world_vector.vector.z = 0.0;
     try {
-      transform_listener_.transformVector(
-          base_frame_id_, world_vector, body_vector);
+      transform_listener_.transformVector(base_frame_id_, world_vector,
+                                          body_vector);
       command.twist.linear.x = body_vector.vector.x;
       command.twist.linear.y = body_vector.vector.y;
       command.twist.linear.z = 0.0;
@@ -300,8 +302,7 @@ HeroChassisController::inverseKinematics(
 }
 
 void HeroChassisController::publishOdometry(const ros::Time& time,
-                                            double linear_x,
-                                            double linear_y,
+                                            double linear_x, double linear_y,
                                             double angular_z) {
   const geometry_msgs::Quaternion orientation =
       tf::createQuaternionMsgFromYaw(yaw_);

@@ -1,16 +1,10 @@
 #ifndef HERO_CHASSIS_CONTROLLER_HERO_CHASSIS_CONTROLLER_H_
 #define HERO_CHASSIS_CONTROLLER_HERO_CHASSIS_CONTROLLER_H_
 
-#include <array>
-#include <cstddef>
-#include <memory>
-#include <string>
-#include <vector>
-
 #include <control_toolbox/pid.h>
 #include <controller_interface/controller.h>
-#include <geometry_msgs/Twist.h>
 #include <geometry_msgs/TransformStamped.h>
+#include <geometry_msgs/Twist.h>
 #include <geometry_msgs/Vector3Stamped.h>
 #include <hardware_interface/joint_command_interface.h>
 #include <nav_msgs/Odometry.h>
@@ -21,6 +15,12 @@
 #include <tf/tfMessage.h>
 #include <tf/transform_listener.h>
 
+#include <array>
+#include <cstddef>
+#include <memory>
+#include <string>
+#include <vector>
+
 namespace hero_chassis_controller {
 
 /**
@@ -30,16 +30,14 @@ namespace hero_chassis_controller {
  * angular velocity with the joint's measured angular velocity and sends the
  * resulting torque to the simulated (or real) joint.
  */
-class HeroChassisController
-    : public controller_interface::Controller<
-          hardware_interface::EffortJointInterface> {
+class HeroChassisController : public controller_interface::Controller<
+                                  hardware_interface::EffortJointInterface> {
  public:
   HeroChassisController() = default;
   ~HeroChassisController() override = default;
 
   bool init(hardware_interface::EffortJointInterface* effort_interface,
-            ros::NodeHandle& root_nh,
-            ros::NodeHandle& controller_nh) override;
+            ros::NodeHandle& root_nh, ros::NodeHandle& controller_nh) override;
   void starting(const ros::Time& time) override;
   void update(const ros::Time& time, const ros::Duration& period) override;
   void stopping(const ros::Time& time) override;
@@ -57,9 +55,7 @@ class HeroChassisController
   void commandCallback(const geometry_msgs::TwistConstPtr& message);
   std::array<double, kWheelCount> inverseKinematics(
       const geometry_msgs::Twist& body_command) const;
-  void publishOdometry(const ros::Time& time,
-                       double linear_x,
-                       double linear_y,
+  void publishOdometry(const ros::Time& time, double linear_x, double linear_y,
                        double angular_z);
   static double normalizeAngle(double angle);
 
@@ -93,8 +89,8 @@ class HeroChassisController
   bool publish_tf_{true};
 
   ros::Subscriber command_subscriber_;
-  std::shared_ptr<
-      realtime_tools::RealtimePublisher<nav_msgs::Odometry>> odom_publisher_;
+  std::shared_ptr<realtime_tools::RealtimePublisher<nav_msgs::Odometry>>
+      odom_publisher_;
   std::shared_ptr<realtime_tools::RealtimePublisher<tf::tfMessage>>
       tf_publisher_;
   std::shared_ptr<
