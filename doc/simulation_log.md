@@ -139,7 +139,19 @@ TF:    x=0.683, y=-0.001, quaternion z=0.685, w=0.729
 6d2e011 feat: import hero chassis controller implementation
 8aa5ee6 fix: use verified Hero wheel geometry
 cf6f628 fix: tune wheel proportional gains in Gazebo
+1d982e3 docs: record verified controller simulation results
+c4db617 docs: add reference controller build and debug evidence
+2cbc311 docs: add PID tuning and wheel response evidence
+3b68f17 docs: update verified build, geometry, and PID status
+d6b90e2 docs: add personal merge conflict exercise
+d77b553 docs: add body mode demonstration notes
+8106704 docs: add global mode demonstration notes
+c7aa61f merge: add body mode practice notes
+925e9b5 merge: combine body and global practice notes
 ```
+
+上述两个演示分支修改了同一行，合并时产生了真实文本冲突。最终解决保留
+body 和 global 两种说明。该冲突明确标注为个人练习，不是多人协作经历。
 
 个人 GitHub 远程仓库和最终推送记录待完成。
 
