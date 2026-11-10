@@ -1,0 +1,20 @@
+<launch>
+  <arg name="paused" default="false"/>
+  <arg name="command_mode" default="body"/>
+
+  <include file="$(find rm_description_for_task)/launch/hero.launch">
+    <arg name="load_chassis" value="true"/>
+    <arg name="roller_type" value="realistic"/>
+    <arg name="paused" value="$(arg paused)"/>
+  </include>
+
+  <rosparam file="$(find hero_chassis_controller)/config/controllers.yaml" command="load"/>
+  <param name="controller/hero_chassis_controller/command_mode" value="$(arg command_mode)"/>
+
+  <node name="controller_spawner"
+        pkg="controller_manager"
+        type="spawner"
+        respawn="false"
+        output="screen"
+        args="controller/hero_chassis_controller controller/joint_state_controller"/>
+</launch>

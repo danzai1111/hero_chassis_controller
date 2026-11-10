@@ -1,0 +1,65 @@
+controller:
+  hero_chassis_controller:
+    type: hero_chassis_controller/HeroChassisController
+
+    # Joint order is fixed: front-left, front-right, back-left, back-right.
+    joints:
+      - left_front_wheel_joint
+      - right_front_wheel_joint
+      - left_back_wheel_joint
+      - right_back_wheel_joint
+
+    # Metres. Confirm the wheel radius and wheel-center offsets against the
+    # rm_description_for_task Xacro model before tuning or presenting results.
+    wheel_radius: 0.07625
+    wheel_x_offset: 0.2018
+    wheel_y_offset: 0.1720
+
+    # Choose "body" for base_link commands or "global" for odom/map commands.
+    command_mode: body
+    base_frame_id: base_link
+    odom_frame_id: odom
+    world_frame_id: odom
+    command_timeout: 0.5
+
+    max_wheel_speed: 18.0
+    max_wheel_acceleration: 12.0
+    max_effort: 2.0
+    publish_rate: 50.0
+    publish_tf: true
+
+    # One independently adjustable control_toolbox::Pid per wheel.
+    pid:
+      left_front_wheel_joint:
+        p: 0.8
+        i: 0.0
+        d: 0.0
+        # Bound the integral contribution to the same scale as max_effort.
+        i_clamp: 2.0
+        antiwindup: true
+        publish_state: true
+      right_front_wheel_joint:
+        p: 0.8
+        i: 0.0
+        d: 0.0
+        i_clamp: 2.0
+        antiwindup: true
+        publish_state: true
+      left_back_wheel_joint:
+        p: 0.8
+        i: 0.0
+        d: 0.0
+        i_clamp: 2.0
+        antiwindup: true
+        publish_state: true
+      right_back_wheel_joint:
+        p: 0.8
+        i: 0.0
+        d: 0.0
+        i_clamp: 2.0
+        antiwindup: true
+        publish_state: true
+
+  joint_state_controller:
+    type: joint_state_controller/JointStateController
+    publish_rate: 50

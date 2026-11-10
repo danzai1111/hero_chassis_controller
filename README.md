@@ -1,200 +1,102 @@
-# Package Name
+# hero_chassis_controller
 
-## Overview
+麦克纳姆轮英雄底盘的 ROS1 `ros_control` 控制器插件，面向 ROS Noetic 和 Gazebo。它订阅 `/cmd_vel`，为四个轮子分别计算期望角速度并由 `control_toolbox::Pid` 输出力矩；同时根据实测轮速发布 `/odom` 和 `odom -> base_link` TF。
 
-This is a template: replace, remove, and add where required. Describe here what this package does and what it's meant
-for in a few sentences.
+## 控制器做什么
 
-**Keywords:** example, package, template
+控制器按以下顺序工作：
 
-Or, add some keywords to the Bitbucket or GitHub repository.
+1. 收到 `/cmd_vel` 的 `geometry_msgs/Twist`。
+2. 在 `body` 模式下直接按 `base_link` 理解指令；在 `global` 模式下通过 TF 将 `world_frame_id` 中的平移速度向量变换到 `base_link`。
+3. 用麦轮逆运动学得到四个轮子的期望角速度。
+4. 分别比较每个期望轮速和关节反馈轮速，用四个独立 PID 计算力矩。
+5. 用四个实测轮速做正运动学，积分位姿，并发布 `/odom` 与 `odom -> base_link`。
 
-### License
+代码采用 ROS C++ 命名空间和 Google 风格的大括号、缩进及命名约定。公式推导和逐项学习笔记见 [`doc/design_and_learning.md`](doc/design_and_learning.md)，答辩口述练习见 [`doc/defense_qa.md`](doc/defense_qa.md)。
 
-The source code is released under a [BSD 3-Clause license](LICENSE).
+从零运行的 Linux/CLion 步骤见 [`doc/start_here_linux.md`](doc/start_here_linux.md)；评分证据清单见 [`doc/assessment_checklist.md`](doc/assessment_checklist.md)；仿真数据记录模板见 [`doc/simulation_log_template.md`](doc/simulation_log_template.md)；11 月 12 日截止的冲刺计划见 [`doc/deadline_plan.md`](doc/deadline_plan.md)；10–15 分钟视频提纲见 [`doc/presentation_outline.md`](doc/presentation_outline.md)。
 
-**Author: Péter Fankhauser<br />
-Affiliation: [ANYbotics](https://www.anybotics.com/)<br />
-Maintainer: Péter Fankhauser, pfankhauser@anybotics.com**
+按 `rm_template` 建立个人仓库、规划真实提交和记录冲突练习的方法见 [`doc/version_control_guide.md`](doc/version_control_guide.md)。
 
-The PACKAGE NAME package has been tested under [ROS] Indigo, Melodic and Noetic on respectively Ubuntu 14.04, 18.04 and
-20.04. This is research code, expect that it changes often and any fitness for a particular purpose is disclaimed.
+必做参考控制器的类成员、`state_`/`last_change_`、固定力矩动作和 pluginlib 加载链逐段学习路线见 [`doc/reference_controller_walkthrough.md`](doc/reference_controller_walkthrough.md)。
 
-[![Build Status](http://rsl-ci.ethz.ch/buildStatus/icon?job=ros_best_practices)](http://rsl-ci.ethz.ch/job/ros_best_practices/)
+四轮 PID 的 rqt_reconfigure、rqt_plot 操作和调参记录步骤见 [`doc/pid_tuning_guide.md`](doc/pid_tuning_guide.md)。
 
-![Example image](doc/example.jpg)
+从指定 Hero Xacro/展开 URDF 核对轮半径、轮心偏置和轴方向的方法见 [`doc/geometry_verification_guide.md`](doc/geometry_verification_guide.md)。配置中的候选几何值未确认前不要用作最终调参或汇报结果。
 
-[comment]: <> (### Publications)
+汇报视频的逐页口述稿草稿见 [`doc/presentation_script.md`](doc/presentation_script.md)。方括号里的内容需要用真实调试、调参和仿真证据替换；收到团队统一 PPT 模板后再套版。
 
-[comment]: <> (If you use this work in an academic context, please cite the following publication&#40;s&#41;:)
+## 仿真前要核对模型参数
 
-[comment]: <> (* P. Fankhauser, M. Bloesch, C. Gehring, M. Hutter, and R. Siegwart: **PAPER TITLE**. IEEE/RSJ International Conference)
+`config/controllers.yaml` 中的 `wheel_radius`、`wheel_x_offset`、`wheel_y_offset` 是以米为单位的几何参数。当前数值只是第一版起点；正式演示前请从 `rm_description_for_task` 的 Hero Xacro 中核实轮半径及轮心相对 `base_link` 的 x/y 坐标。偏置是轮心坐标的绝对值，不是左右轮或前后轮之间的全间距。控制器用 `wheel_x_offset + wheel_y_offset` 作为麦轮转动项的力臂。
 
-[comment]: <> (  on Intelligent Robots and Systems &#40;IROS&#41;, 2015. &#40;[PDF]&#40;http://dx.doi.org/10.3929/ethz-a-010173654&#41;&#41;)
+提交前请将 `package.xml` 的维护者姓名和邮箱替换为你自己的信息。
 
-[comment]: <> (        @inproceedings{Fankhauser2015,)
+压缩包包含 ROS 包源码，不含 Git 历史。按考核要求，用 `rm_template` 创建你自己的 `hero_chassis_controller` 仓库，再逐项提交源码和运行记录，保留真实的提交与合并记录。
 
-[comment]: <> (            author = {Fankhauser, P\'{e}ter and Hutter, Marco},)
+配置里的 PID 值也是启动初值，不能代替仿真调参。请在 Gazebo 中观察期望/实测轮速，用 `rqt_plot` 和 `rqt_reconfigure` 调整四个轮子的参数，并保存最终参数。
 
-[comment]: <> (            booktitle = {IEEE/RSJ International Conference on Intelligent Robots and Systems &#40;IROS&#41;},)
+## 编译与运行
 
-[comment]: <> (            title = {{PAPER TITLE}},)
+构建依赖包括 `control_msgs`、`control_toolbox`、`controller_interface`、`geometry_msgs`、`hardware_interface`、`nav_msgs`、`pluginlib`、`realtime_tools`、`roscpp`、`std_msgs` 和 `tf`。仿真运行还需要 `rm_description_for_task`（ROS 包名 `rm_description`）、`gazebo_ros_control`、`controller_manager` 和 `joint_state_controller`；键盘遥控使用 `teleop_twist_keyboard`。PID 调参演示需要安装 `rqt_reconfigure` 和 `rqt_plot`。
 
-[comment]: <> (            publisher = {IEEE},)
+按考核要求用 CLion 编译和调试。在使用 catkin-tools 的工作区中，CLion 应分别打开包内的 `CMakeLists.txt`；从已加载 ROS Noetic 环境的 shell 启动 CLion，并使用 `Debug` 配置。运行 `.launch` 后在 CLion 中附加到 `gzserver`。若需要 catkin 命令行工具，使用 `catkin build`，不要使用 `catkin_make`。详细操作见 [`doc/start_here_linux.md`](doc/start_here_linux.md)。
 
-[comment]: <> (            year = {2015})
+先在 CLion 中成功编译，然后运行：
 
-[comment]: <> (        })
+```bash
+roslaunch hero_chassis_controller run_simulation_and_controller.launch
+```
 
-## Installation
+全局速度模式：
 
-### Installation from Packages
+```bash
+roslaunch hero_chassis_controller run_simulation_and_controller.launch command_mode:=global
+```
 
-To install all packages from the this repository as Debian packages use
+键盘控制要在能接收键盘输入的交互式终端中运行。推荐另开一个终端直接运行（并保持该终端窗口有焦点）：
 
-    sudo apt-get install ros-noetic-...
+```bash
+rosrun teleop_twist_keyboard teleop_twist_keyboard.py cmd_vel:=/cmd_vel
+```
 
-Or better, use `rosdep`:
+上游也以 `rosrun` 作为键盘节点的运行方式。`teleop_keyboard.launch` 是可选启动封装；如果它启动后按键没有响应，改用上面的交互式终端命令。参见 [`teleop_twist_keyboard` 上游说明](https://github.com/ros-teleop/teleop_twist_keyboard#launch)。
 
-	sudo rosdep install --from-paths src
+仿真默认不暂停；若启动时显式传入 `paused:=true`，需要先在 Gazebo 中继续仿真。
 
-### Building from Source
+## 配置
 
-#### Dependencies
+`config/controllers.yaml` 定义以下配置：
 
-- [Robot Operating System (ROS)](http://wiki.ros.org) (middleware for robotics),
-- [Eigen] (linear algebra library)
+| 参数 | 说明 |
+| --- | --- |
+| `joints` | 按前左、前右、后左、后右排列的四个关节名 |
+| `wheel_radius` | 轮半径，单位 m |
+| `wheel_x_offset`, `wheel_y_offset` | 轮心到 `base_link` 原点的纵向、横向距离，单位 m |
+| `command_mode` | `body` 或 `global` |
+| `base_frame_id`, `odom_frame_id`, `world_frame_id` | 底盘、里程计和全局指令坐标系 |
+| `max_wheel_speed` | 轮速上限，单位 rad/s；超限时按同一比例缩放四轮指令 |
+| `max_wheel_acceleration` | 轮速变化上限，单位 rad/s²；设为 0 时关闭 |
+| `max_effort` | PID 输出力矩限幅，单位 N·m |
+| `publish_rate` | `/odom` 和 TF 发布频率，单位 Hz |
+| `pid/<joint>/p,i,d,i_clamp` | 各轮独立 PID 参数；支持动态调参 |
 
-  sudo rosdep install --from-paths src
+## 观测与调参
 
-#### Building
+- `/cmd_vel` (`geometry_msgs/Twist`)：底盘速度指令。
+- `/odom` (`nav_msgs/Odometry`)：由实测轮速计算的速度和里程计位姿。
+- `/controller/hero_chassis_controller/wheel_state` (`std_msgs/Float64MultiArray`)：按 `[FL目标,FL实测,FR目标,FR实测,BL目标,BL实测,BR目标,BR实测]` 保存四轮角速度；例如 `data[0]` 是前左轮目标值，`data[1]` 是前左轮实测值。
+- `/controller/hero_chassis_controller/pid/<joint>/state` (`control_msgs/PidState`)：每个 PID 启用 `publish_state` 后发布内部 P/I/D 状态。
+- `rqt_reconfigure`：在四个 PID 各自的动态参数服务中调节 `p/i/d` 和积分限幅。
+- `rqt_plot`：绘制 `/controller/hero_chassis_controller/wheel_state/data[0]` 与 `data[1]` 等期望/实测轮速曲线。
+- `rosrun tf tf_echo odom base_link`：查看里程计到车体的坐标变换。
 
-To build from source, clone the latest version from this repository into your catkin workspace and compile the package
-using
+## 演示建议
 
-	cd catkin_workspace/src
-	git clone https://github.com/ethz-asl/ros_best_practices.git
-	cd ../
-	rosdep install --from-paths . --ignore-src
-	catkin_make
+1. 用 `linear.x > 0` 演示前进，用 `linear.y > 0` 演示左移，用 `angular.z > 0` 演示逆时针旋转。
+2. 展示四轮目标轮速与实测轮速曲线，说明 PID 如何减小误差，并现场调一组 PID 参数。
+3. 展示 `/odom` 与 `odom -> base_link` TF。
+4. 切换 `command_mode:=global`，让机器人先转向，再给世界坐标系中的 x/y 指令，说明 TF 如何把指令转换到底盘坐标系。
+5. 停止发送 `/cmd_vel`，确认超时后轮速目标归零；演示键盘控制和加速度限制。
 
-### Running in Docker
-
-Docker is a great way to run an application with all dependencies and libraries bundles together. Make sure
-to [install Docker](https://docs.docker.com/get-docker/) first.
-
-First, spin up a simple container:
-
-	docker run -ti --rm --name ros-container ros:noetic bash
-
-This downloads the `ros:noetic` image from the Docker Hub, indicates that it requires an interactive terminal (`-t, -i`)
-, gives it a name (`--name`), removes it after you exit the container (`--rm`) and runs a command (`bash`).
-
-Now, create a catkin workspace, clone the package, build it, done!
-
-	apt-get update && apt-get install -y git
-	mkdir -p /ws/src && cd /ws/src
-	git clone https://github.com/leggedrobotics/ros_best_practices.git
-	cd ..
-	rosdep install --from-path src
-	catkin_make
-	source devel/setup.bash
-	roslaunch ros_package_template ros_package_template.launch
-
-### Unit Tests
-
-Run the unit tests with
-
-	catkin_make run_tests_ros_package_template
-
-### Static code analysis
-
-Run the static code analysis with
-
-	catkin_make roslint_ros_package_template
-
-## Usage
-
-Describe the quickest way to run this software, for example:
-
-Run the main node with
-
-	roslaunch ros_package_template ros_package_template.launch
-
-## Config files
-
-Config file folder/set 1
-
-* **config_file_1.yaml** Shortly explain the content of this config file
-
-Config file folder/set 2
-
-* **...**
-
-## Launch files
-
-* **launch_file_1.launch:** shortly explain what is launched (e.g standard simulation, simulation with gdb,...)
-
-  Argument set 1
-
-    - **`argument_1`** Short description (e.g. as commented in launch file). Default: `default_value`.
-
-  Argument set 2
-
-    - **`...`**
-
-* **...**
-
-## Nodes
-
-### ros_package_template
-
-Reads temperature measurements and computed the average.
-
-#### Subscribed Topics
-
-* **`/temperature`** ([sensor_msgs/Temperature])
-
-  The temperature measurements from which the average is computed.
-
-#### Published Topics
-
-...
-
-#### Services
-
-* **`get_average`** ([std_srvs/Trigger])
-
-  Returns information about the current average. For example, you can trigger the computation from the console with
-
-  	rosservice call /ros_package_template/get_average
-
-#### Parameters
-
-* **`subscriber_topic`** (string, default: "/temperature")
-
-  The name of the input topic.
-
-* **`cache_size`** (int, default: 200, min: 0, max: 1000)
-
-  The size of the cache.
-
-### NODE_B_NAME
-
-...
-
-## Bugs & Feature Requests
-
-Please report bugs and request features using the [Issue Tracker](https://github.com/gdut-dynamic-x/rm_template/issues)
-.
-
-
-[ROS]: http://www.ros.org
-
-[rviz]: http://wiki.ros.org/rviz
-
-[Eigen]: http://eigen.tuxfamily.org
-
-[std_srvs/Trigger]: http://docs.ros.org/api/std_srvs/html/srv/Trigger.html
-
-[sensor_msgs/Temperature]: http://docs.ros.org/api/sensor_msgs/html/msg/Temperature.html
+演示结果必须以你实际运行的 Gazebo 画面和 ROS 输出为准；本仓库当前尚未在你的 Ubuntu/CLion 环境中编译或运行。
