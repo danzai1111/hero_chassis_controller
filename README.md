@@ -12,27 +12,11 @@
 4. 分别比较每个期望轮速和关节反馈轮速，用四个独立 PID 计算力矩。
 5. 用四个实测轮速做正运动学，积分位姿，并发布 `/odom` 与 `odom -> base_link`。
 
-代码采用 ROS C++ 命名空间和 Google 风格的大括号、缩进及命名约定。公式推导和逐项学习笔记见 [`doc/design_and_learning.md`](doc/design_and_learning.md)，答辩口述练习见 [`doc/defense_qa.md`](doc/defense_qa.md)。
-
-从零运行的 Linux/CLion 步骤见 [`doc/start_here_linux.md`](doc/start_here_linux.md)；评分证据清单见 [`doc/assessment_checklist.md`](doc/assessment_checklist.md)；实际仿真记录见 [`doc/simulation_log.md`](doc/simulation_log.md)；11 月 12 日截止的冲刺计划见 [`doc/deadline_plan.md`](doc/deadline_plan.md)；10–15 分钟视频提纲见 [`doc/presentation_outline.md`](doc/presentation_outline.md)。
-
-按 `rm_template` 建立个人仓库、规划真实提交和记录冲突练习的方法见 [`doc/version_control_guide.md`](doc/version_control_guide.md)。
-
-必做参考控制器的类成员、`state_`/`last_change_`、固定力矩动作和 pluginlib 加载链逐段学习路线见 [`doc/reference_controller_walkthrough.md`](doc/reference_controller_walkthrough.md)。
-
-四轮 PID 的 rqt_reconfigure、rqt_plot 操作和调参记录步骤见 [`doc/pid_tuning_guide.md`](doc/pid_tuning_guide.md)。
-
-从指定 Hero Xacro/展开 URDF 核对轮半径、轮心偏置和轴方向的方法见 [`doc/geometry_verification_guide.md`](doc/geometry_verification_guide.md)。当前配置已从 Hero Xacro 核实为轮半径 `0.07625 m`、轮心纵横偏置 `0.2 m`。
-
-汇报视频的逐页口述稿草稿见 [`doc/presentation_script.md`](doc/presentation_script.md)。方括号里的内容需要用真实调试、调参和仿真证据替换；收到团队统一 PPT 模板后再套版。
+设计推导见 [`doc/design.md`](doc/design.md)，实际验证结果见 [`doc/validation.md`](doc/validation.md)，Git 分支和合并记录见 [`doc/git_notes.md`](doc/git_notes.md)。
 
 ## 仿真前要核对模型参数
 
 `config/controllers.yaml` 中的 `wheel_radius`、`wheel_x_offset`、`wheel_y_offset` 是以米为单位的几何参数。当前值已从 `rm_description_for_task` 的 Hero Xacro 核实：`wheel_track=0.4 m`、`wheel_base=0.4 m`、`wheel_radius=0.07625 m`。偏置是轮心坐标的绝对值，不是左右轮或前后轮之间的全间距。控制器用 `wheel_x_offset + wheel_y_offset = 0.4 m` 作为麦轮转动项的力臂。
-
-`package.xml` 已填写个人维护者信息。
-
-压缩包包含 ROS 包源码，不含 Git 历史。按考核要求，用 `rm_template` 创建你自己的 `hero_chassis_controller` 仓库，再逐项提交源码和运行记录，保留真实的提交与合并记录。
 
 配置里的 PID 已在 Gazebo 中使用 `rqt_plot` 和 `rqt_reconfigure` 调参。当前四轮使用 `p=1.2`、`i=0`、`d=0`、`i_clamp=2.0`，目标与实测轮速曲线见 `doc/evidence/pid_tuning_rqt.png`。
 
@@ -40,7 +24,7 @@
 
 构建依赖包括 `control_msgs`、`control_toolbox`、`controller_interface`、`geometry_msgs`、`hardware_interface`、`nav_msgs`、`pluginlib`、`realtime_tools`、`roscpp`、`std_msgs` 和 `tf`。仿真运行还需要 `rm_description_for_task`、`gazebo_ros_control`、`controller_manager` 和 `joint_state_controller`；键盘遥控使用 `teleop_twist_keyboard`。PID 调参演示需要安装 `rqt_reconfigure` 和 `rqt_plot`。
 
-按考核要求用 CLion 编译和调试。在使用 catkin-tools 的工作区中，CLion 应分别打开包内的 `CMakeLists.txt`；从已加载 ROS Noetic 环境的 shell 启动 CLion，并使用 `Debug` 配置。运行 `.launch` 后在 CLion 中附加到 `gzserver`。若需要 catkin 命令行工具，使用 `catkin build`，不要使用 `catkin_make`。详细操作见 [`doc/start_here_linux.md`](doc/start_here_linux.md)。
+推荐使用 CLion 的 Docker 工具链打开包内的 `CMakeLists.txt`，选择 `Debug` 配置完成构建。运行 `.launch` 后可将调试器连接到 `gzserver`。
 
 先在 CLion 中成功编译，然后运行：
 
@@ -99,4 +83,4 @@ rosrun teleop_twist_keyboard teleop_twist_keyboard.py cmd_vel:=/cmd_vel
 4. 切换 `command_mode:=global`，让机器人先转向，再给世界坐标系中的 x/y 指令，说明 TF 如何把指令转换到底盘坐标系。
 5. 停止发送 `/cmd_vel`，确认超时后轮速目标归零；演示键盘控制和加速度限制。
 
-本控制器已在 ROS Noetic、Gazebo Classic 11.15.1 和 CLion Docker 工具链中成功编译和运行；前进、左移、逆时针、PID 轮速跟随、`/odom`、TF 与 global 模式均已实际验证。键盘启动节点已验证可用，交互式按键录屏仍待补充。
+本控制器已在 ROS Noetic、Gazebo Classic 11.15.1 和 CLion Docker 工具链中成功编译和运行；前进、左移、逆时针、PID 轮速跟随、`/odom`、TF 与 global 模式均已实际验证。键盘遥控启动文件已包含在 `launch/` 中。

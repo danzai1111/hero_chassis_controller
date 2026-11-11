@@ -1,4 +1,4 @@
-# Hero 底盘控制器仿真记录
+# Hero 底盘控制器验证记录
 
 本记录只填写在实际运行中观察到的结果。截图和视频文件后续保存在
 `doc/evidence/`，未验证项目单独标记。
@@ -129,42 +129,3 @@ TF:    x=0.683, y=-0.001, quaternion z=0.685, w=0.729
 | --- | --- | --- |
 | 命令超时 | `command_timeout=0.5 s` | 停止发布后目标轮速回到 0 |
 | 加速度限制 | `max_wheel_acceleration=12 rad/s²` | 目标轮速按控制周期逐步增加 |
-| 键盘遥控 | `teleop_twist_keyboard` | 启动文件已提供，交互式按键演示仍待录制 |
-
-## 9. Git
-
-个人仓库本地提交：
-
-```text
-6d2e011 feat: import hero chassis controller implementation
-8aa5ee6 fix: use verified Hero wheel geometry
-cf6f628 fix: tune wheel proportional gains in Gazebo
-1d982e3 docs: record verified controller simulation results
-c4db617 docs: add reference controller build and debug evidence
-2cbc311 docs: add PID tuning and wheel response evidence
-3b68f17 docs: update verified build, geometry, and PID status
-d6b90e2 docs: add personal merge conflict exercise
-d77b553 docs: add body mode demonstration notes
-8106704 docs: add global mode demonstration notes
-c7aa61f merge: add body mode practice notes
-925e9b5 merge: combine body and global practice notes
-```
-
-上述两个演示分支修改了同一行，合并时产生了真实文本冲突。最终解决保留
-body 和 global 两种说明。该冲突明确标注为个人练习，不是多人协作经历。
-
-个人 GitHub 仓库：
-
-```text
-https://github.com/danzai1111/hero_chassis_controller
-```
-
-远端已包含 `master`、`practice/body-doc` 和 `practice/global-doc`
-三条分支。
-
-## 10. 视频交付
-
-- 团队 PPT 模板：待提供
-- 10–15 分钟 MP4：待录制
-- 文件名“姓名 年级”：待确认
-- 视频发送记录：待完成
